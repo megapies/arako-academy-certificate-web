@@ -13,6 +13,7 @@ type RedisData = {
   email: string,
   course_name: string,
   issued_date: string,
+  style?: string,
 } | null;
 
 // Initialize Redis client
@@ -23,6 +24,13 @@ const LATO_BOLD_BASE64 = fs.readFileSync(path.resolve('./public/fonts/encoded-La
 const LITERATA_REGULAR_BASE64 = fs.readFileSync(path.resolve('./public/fonts/encoded-Literata-Regular.base64')).toString()
 const LITERATA_BOLD_BASE64 = fs.readFileSync(path.resolve('./public/fonts/encoded-Literata-Bold.base64')).toString()
 const DANCING_SCRIPT_BASE64 = fs.readFileSync(path.resolve('./public/fonts/DancingScript-VariableFont_wght.base64')).toString()
+
+const getImageBase64 = (imagePath: string): string => {
+  const imageBuffer = fs.readFileSync(imagePath);
+  const mimeType = path.extname(imagePath).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg';
+  const base64Image = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+  return base64Image;
+};
 
 const addCustomFont = (doc: jsPDF) => {
   doc.addFileToVFS('Dacing-Script.ttf', DANCING_SCRIPT_BASE64);
@@ -83,11 +91,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Data not found for the provided ID.' }, { status: 404 });
   }
 
+  const portfolioURL = `https://academy.natthapach.com/student/portfoilo?id=${id}`
+
   // สร้าง QR Code เป็น Data URL (PNG)
   let qrCodeDataURL: string;
   try {
-    const qrUrl = `https://img.com/${id}`; // ใช้ https
-    qrCodeDataURL = await QRCode.toDataURL(qrUrl);
+    qrCodeDataURL = await QRCode.toDataURL(portfolioURL);
   } catch (error) {
     console.error('Error generating QR Code:', error);
     return NextResponse.json({ error: 'Failed to generate QR Code.' }, { status: 500 });
@@ -107,6 +116,15 @@ export async function GET(request: Request) {
   addCustomFont(doc);
 
 
+  const BG_DICT: Record<string, string | undefined> = {
+    'O1': './public/templates/certificate-bg-1.png',
+    'O2': './public/templates/certificate-bg-2.png',
+  }
+
+  const bgPath = BG_DICT[redisData.style || ''] || './public/templates/certificate-bg-1.png'
+  path.resolve(bgPath);
+  const bgBase64 = getImageBase64(bgPath);
+  doc.addImage(bgBase64, 'PNG', 0, 0, width, hight)
 
   doc
     .setFontSize(54.2)
@@ -116,7 +134,7 @@ export async function GET(request: Request) {
 
   doc
     .setFontSize(21)
-    .setTextColor('#0669cd')
+    .setTextColor('#103a74')
     .setFont('Lato-Regular')
     .text(`Of Accomplishment`, width / 2, cmToPt(6.84), { align: 'center' });
 
@@ -130,7 +148,7 @@ export async function GET(request: Request) {
     .setFontSize(45)
     .setTextColor('#dfa734')
     .setFont('Dacing-Script')
-    .text(`${redisData.first_name} ${redisData.last_name}`, width / 2, cmToPt(11.73), { align: 'center' });
+    .text(`${redisData.first_name} ${redisData.last_name}`, width / 2, cmToPt(11.2), { align: 'center' });
 
   doc
     .setFontSize(16)
@@ -178,7 +196,7 @@ export async function GET(request: Request) {
 
   // เพิ่มลิงก์ที่กำหนดให้กับพื้นที่สี่เหลี่ยม
   // doc.setDrawColor(0, 0, 255).setLineWidth(1).rect(cmToPt(24.7), cmToPt(15.2), 70, 100)
-  doc.link(cmToPt(24.7), cmToPt(15.2), 70, 100, { url: 'https://www.example.com' });
+  doc.link(cmToPt(24.7), cmToPt(15.2), 70, 100, { url: portfolioURL });
   // สร้าง PDF เป็น ArrayBuffer
   const pdfArrayBuffer = doc.output('arraybuffer');
 
