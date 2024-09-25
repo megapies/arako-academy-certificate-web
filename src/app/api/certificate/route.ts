@@ -25,6 +25,11 @@ const LITERATA_REGULAR_BASE64 = fs.readFileSync(path.resolve('./public/fonts/enc
 const LITERATA_BOLD_BASE64 = fs.readFileSync(path.resolve('./public/fonts/encoded-Literata-Bold.base64')).toString()
 const DANCING_SCRIPT_BASE64 = fs.readFileSync(path.resolve('./public/fonts/DancingScript-VariableFont_wght.base64')).toString()
 
+const BG_DICT: Record<string, string | undefined> = {
+  'O1': path.resolve('./public/templates/certificate-bg-1.png'),
+  'O2': path.resolve('./public/templates/certificate-bg-2.png'),
+}
+
 const getImageBase64 = (imagePath: string): string => {
   const imageBuffer = fs.readFileSync(imagePath);
   const mimeType = path.extname(imagePath).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg';
@@ -115,14 +120,7 @@ export async function GET(request: Request) {
   console.log(`Page size ${width} x ${hight}`)
   addCustomFont(doc);
 
-
-  const BG_DICT: Record<string, string | undefined> = {
-    'O1': './public/templates/certificate-bg-1.png',
-    'O2': './public/templates/certificate-bg-2.png',
-  }
-
-  const _bgPath = BG_DICT[redisData.style || ''] || './public/templates/certificate-bg-1.png'
-  const bgPath = path.resolve(_bgPath);
+  const bgPath = BG_DICT[redisData.style || ''] || BG_DICT['O1'] || ''
   const bgBase64 = getImageBase64(bgPath);
   doc.addImage(bgBase64, 'PNG', 0, 0, width, hight)
 
