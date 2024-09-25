@@ -121,8 +121,8 @@ export async function GET(request: Request) {
     'O2': './public/templates/certificate-bg-2.png',
   }
 
-  const bgPath = BG_DICT[redisData.style || ''] || './public/templates/certificate-bg-1.png'
-  path.resolve(bgPath);
+  const _bgPath = BG_DICT[redisData.style || ''] || './public/templates/certificate-bg-1.png'
+  const bgPath = path.resolve(_bgPath);
   const bgBase64 = getImageBase64(bgPath);
   doc.addImage(bgBase64, 'PNG', 0, 0, width, hight)
 
