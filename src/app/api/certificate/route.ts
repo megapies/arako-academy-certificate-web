@@ -46,7 +46,10 @@ const addCustomFont = (doc: jsPDF) => {
 // Helper function เพื่อดึงข้อมูลจาก Redis
 const fetchDataById = async (id: string): Promise<RedisData> => {
   try {
-    const data = await redis.call('JSON.GET', `cert:${id}`)
+    const key = `cert:${id}`
+    const data = await redis.call('JSON.GET', key)
+    console.log(`Query key:${key}, get data ${data}`)
+
     if (data) {
       return JSON.parse(data as string) as RedisData
     }
